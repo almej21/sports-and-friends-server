@@ -18,21 +18,77 @@ router.get("/getallgroups", async (res) => {
   }
 });
 
-// Create new group
+// Create new group.
 router.post("/creategroup", async (req, res) => {
   var currTimeInUtc = Date.now();
 
   var new_group = new GroupModel({
+    group_name: req.body.group_name,
+    group_password: req.body.group_password,
     admin_user_name: req.body.user_name,
     admin_email: req.body.admin_email,
-    members: [{ user_name: req.body.user_id, points: 0 }],
+    members: [{ user_name: req.body.user_name, points: 0 }],
     fixtures_ids: [],
     created: currTimeInUtc,
   });
 
   try {
-    new_group = await new_group.save();
+    var user = await UserModel.findOne({
+      user_name: req.body.user_name,
+    });
+    if (!user) {
+      res
+        .status(400)
+        .json({ message: `user: '${req.body.user_name}' not found.` });
+    } else {
+      new_group = await new_group.save();
+    }
     res.status(201).json({ new_group: new_group });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Add user to group.
+router.patch("/addusertogroup", async (req, res) => {
+  const group_name = req.body.group_name;
+  const group_pass = req.body.group_pass;
+  const requesting_user = req.body.user_name;
+
+  try {
+    var group = await GroupModel.findOne({
+      group_name: group_name,
+      group_password: group_pass,
+    });
+
+    var user = await UserModel.findOne({
+      user_name: requesting_user,
+    });
+
+    if (!group || !user) {
+      res.status(404).json({ message: "Group name or password is incorrect" });
+    } else {
+      var group_obj = group.toObject();
+      for (member of group_obj.members) {
+        if (member.user_name == requesting_user) {
+          console.log(
+            `can't add user to group, user: '${requesting_user}' is already in the group`
+          );
+          res.status(400).json({
+            message: `user: '${requesting_user}' is already in the group`,
+          });
+          return;
+        }
+      }
+
+      group.members.push({ user_name: requesting_user, points: 0 });
+      group.save();
+      user.groups_ids.push(group._id);
+      user.save();
+      res.status(202).json({
+        message: `${requesting_user} was added to group: ${group_name}`,
+      });
+    }
   } catch (err) {
     res.status(400).json({ message: err.message });
   }

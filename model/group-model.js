@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 
 const groupSchema = new mongoose.Schema({
+  group_name: String,
+  group_password: String,
   admin_user_name: {
     type: String,
     required: true,
