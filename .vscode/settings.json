@@ -1,3 +1,9 @@
 {
-  "cSpell.words": ["addusertogroup", "apisports", "creategroup", "getallgroups"]
+  "cSpell.words": [
+    "addusertogroup",
+    "apisports",
+    "creategroup",
+    "getallgroups",
+    "removeuserfromgroup"
+  ]
 }

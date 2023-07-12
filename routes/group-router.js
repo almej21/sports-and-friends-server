@@ -94,4 +94,68 @@ router.patch("/addusertogroup", async (req, res) => {
   }
 });
 
+// Remove user from group.
+router.patch("/removeuserfromgroup", async (req, res) => {
+  const group_name = req.body.group_name;
+  const group_pass = req.body.group_pass;
+  const requesting_user = req.body.user_name;
+
+  try {
+    var group = await GroupModel.findOne({
+      group_name: group_name,
+      group_password: group_pass,
+    }).lean();
+
+    var user = await UserModel.findOne({
+      user_name: requesting_user,
+    }).lean();
+
+    if (!group || !user) {
+      res.status(404).json({ message: "Group name or password is incorrect" });
+    } else {
+      var updatedGroupMembers = group.members.filter(
+        (member) => member.user_name != requesting_user
+      );
+
+      var newGroupDoc = new GroupModel({
+        _id: group._id,
+        group_name: group.group_name,
+        group_password: group.group_password,
+        admin_user_name: group.admin_user_name,
+        admin_email: group.admin_email,
+        members: updatedGroupMembers,
+        fixtures_ids: group.fixtures_ids,
+        created: group.created,
+      });
+
+      await GroupModel.deleteOne({ _id: group._id });
+      newGroupDoc.save();
+
+      var updatedGroups = user.groups_ids.filter(
+        (groupId) => groupId != newGroupDoc._id
+      );
+
+      var newUserDoc = new UserModel({
+        _id: user._id,
+        user_name: user.user_name,
+        email: user.email,
+        password: user.password,
+        member_since: user.member_since,
+        credit: user.credit,
+        points: user.points,
+        groups_ids: updatedGroups,
+      });
+
+      await UserModel.deleteOne({ _id: user._id });
+      newUserDoc.save();
+
+      res.status(202).json({
+        message: `${requesting_user} was removed from group: ${group_name}`,
+      });
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 module.exports = router;
