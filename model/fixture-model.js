@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 
 const fixtureSchema = new mongoose.Schema({
+  fixture_unix_time: Number,
+  date: String,
   league: {
     name: String,
     country: String,

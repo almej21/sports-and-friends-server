@@ -4,6 +4,8 @@
     "apisports",
     "creategroup",
     "getallgroups",
+    "getfixtures",
+    "getfixturesbydate",
     "removeuserfromgroup"
   ]
 }

@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
 const FixtureModel = require("../model/fixture-model");
 
-exports.saveFixtures = async function (fixtures_arr_from_response) {
+exports.saveFixtures = async function (
+  fixtures_arr_from_response,
+  fixtures_date
+) {
   var fixtures_arr_to_save = [];
+  // var curr_time = new Date().getTime();
+  var fixture_time = fixtures_arr_from_response[0].fixture.timestamp;
+
   fixtures_arr_from_response.forEach((fixture) => {
     const fixture_doc = new FixtureModel({
+      unix_time: fixture_time,
+      date: fixtures_date,
       league: fixture.league,
       clubs: {
         home: {

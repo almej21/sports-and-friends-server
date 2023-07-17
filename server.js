@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const DbService = require("./utils/db-service");
 const userRouter = require("./routes/user-router.js");
 const groupRouter = require("./routes/group-router.js");
+const fixtureRouter = require("./routes/fixture-router.js");
 
 mongoose.connect(process.env.DATABASE_URL);
 const db = mongoose.connection;
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use("/user", userRouter);
 app.use("/groups", groupRouter);
+app.use("/fixtures", fixtureRouter);
 
 app.get("/", (req, res) => {
   res.send("hell World!");
@@ -33,13 +35,14 @@ setInterval(function () {
   axios
     .get("https://v3.football.api-sports.io/fixtures", {
       headers: { "x-apisports-key": process.env.API_KEY },
-      params: { date: "2023-08-12", league: "39", season: "2023" },
+      params: { date: "2023-08-13", league: "140", season: "2023" },
     })
     .then(async (response) => {
       console.log(response.data.response);
-      response_arr = [...response.data.response];
+      var response_fixtures_arr = [...response.data.response];
+      var fixtures_date = response.data.parameters.date;
 
-      if (DbService.saveFixtures(response_arr)) {
+      if (DbService.saveFixtures(response_fixtures_arr, fixtures_date)) {
         console.log("Records saved successfully");
       } else {
         console.error("Error with saving documents");

@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
 
 // Sign up / add new user / register user
 router.post("/signup", async (req, res) => {
-  var currTimeInUtc = new Date().getTime();
+  var currTimeInUnix = new Date().getTime();
 
   // create a hashed string for the given password to store in the DB.
   var hashedPass = bcrypt.hashSync(req.body.password.trim(), 10);
@@ -44,7 +44,7 @@ router.post("/signup", async (req, res) => {
     user_name: req.body.user_name,
     email: req.body.email,
     password: hashedPass,
-    member_since: currTimeInUtc,
+    member_since: currTimeInUnix,
     credit: 0,
     points: 0,
   });
