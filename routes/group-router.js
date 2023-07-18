@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const GroupModel = require("../model/group-model");
 const UserModel = require("../model/user-model");
+const FuncService = require("../utils/function-service");
 
 // Get all the groups in the collection.
 router.get("/getallgroups", async (res) => {
@@ -153,6 +154,50 @@ router.patch("/removeuserfromgroup", async (req, res) => {
         message: `${requesting_user} was removed from group: ${group_name}`,
       });
     }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Add fixture to group.
+router.patch("/addfixturetogroup", async (req, res) => {
+  const group_name = req.body.group_name;
+  const group_pass = req.body.group_pass;
+  const fixtures_ids_to_add = req.body.fixtures_ids;
+  const requesting_user = req.body.user_name;
+
+  try {
+    var group = await GroupModel.findOne({
+      group_name: group_name,
+      group_password: group_pass,
+    });
+
+    var user = await UserModel.findOne({
+      user_name: requesting_user,
+    });
+
+    if (!group || !user) {
+      res.status(404).json({ message: "Group name or password is incorrect" });
+    } else if (user.user_name !== group.admin_user_name) {
+      res.status(401).json({
+        message: "You are not allowed to add fixtures to this group.",
+      });
+    } else {
+      var group_obj = group.toObject();
+      var already_exist = FuncService.haveCommonElement(
+        group_obj.fixtures_ids,
+        fixtures_ids_to_add
+      );
+      if (already_exist) {
+        res.status(400).json({ message: "Fixture already exist in the group" });
+      }
+    }
+
+    group.fixtures_ids = group.fixtures_ids.concat(fixtures_ids_to_add);
+    group.save();
+    res.status(202).json({
+      message: `${fixtures_ids_to_add.length} fixtures added to group: ${group_name}`,
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
