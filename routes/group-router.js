@@ -159,7 +159,7 @@ router.patch("/removeuserfromgroup", async (req, res) => {
   }
 });
 
-// Add fixture to group.
+// Add fixture/s to group.
 router.patch("/addfixturetogroup", async (req, res) => {
   const group_name = req.body.group_name;
   const group_pass = req.body.group_pass;
@@ -197,6 +197,43 @@ router.patch("/addfixturetogroup", async (req, res) => {
     group.save();
     res.status(202).json({
       message: `${fixtures_ids_to_add.length} fixtures added to group: ${group_name}`,
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Remove one fixture from group.
+router.patch("/removefixturefromgroup", async (req, res) => {
+  const group_name = req.body.group_name;
+  const group_pass = req.body.group_pass;
+  const fixture_id_to_remove = req.body.fixtures_ids;
+  const requesting_user = req.body.user_name;
+
+  try {
+    var group = await GroupModel.findOne({
+      group_name: group_name,
+      group_password: group_pass,
+    });
+
+    var user = await UserModel.findOne({
+      user_name: requesting_user,
+    });
+
+    if (!group || !user) {
+      res.status(404).json({ message: "Group name or password is incorrect" });
+    } else if (user.user_name !== group.admin_user_name) {
+      res.status(401).json({
+        message: "You are not allowed to remove fixtures from this group.",
+      });
+    }
+
+    group.fixtures_ids = group.fixtures_ids.filter(
+      (id) => id !== fixture_id_to_remove
+    );
+    group.save();
+    res.status(202).json({
+      message: `fixture with id: [${fixture_id_to_remove}] has been successfully removed from group: ${group_name}`,
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
