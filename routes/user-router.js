@@ -53,9 +53,11 @@ router.post("/signup", async (req, res) => {
     const existingUser = await UserModel.find({ email: req.body.email });
     if (existingUser.length > 0) {
       res.status(401).send("email already exists");
+      return;
     } else {
       const newUser = await user.save();
       res.status(201).json({ new_user: newUser });
+      return;
     }
   } catch (err) {
     res.status(400).json({ message: err.message });

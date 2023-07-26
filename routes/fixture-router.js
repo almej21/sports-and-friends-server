@@ -17,8 +17,10 @@ router.get("/getfixturesbydateandleague", async (req, res) => {
 
     if (fixtures.length > 0) {
       res.status(200).json(fixtures);
+      return;
     } else {
       res.status(404).json({ message: "No fixtures found." });
+      return;
     }
   } catch (err) {
     res.status(404).error(err);
@@ -48,8 +50,10 @@ router.get("/allfixtures", async (req, res) => {
 
     if (filteredFixtureArray.length > 0) {
       res.status(200).json(filteredArray);
+      return;
     } else {
       res.status(404).json({ message: "No fixtures found." });
+      return;
     }
   } catch (err) {
     res.status(404).json(err);

@@ -14,6 +14,7 @@ router.get("/getallgroups", async (res) => {
       return;
     }
     res.json(all_groups);
+    return;
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -37,14 +38,18 @@ router.post("/creategroup", async (req, res) => {
     var user = await UserModel.findOne({
       user_name: req.body.user_name,
     });
-    if (!user) {
+    if (!user || user.email !== req.body.admin_email) {
       res
         .status(400)
-        .json({ message: `user: '${req.body.user_name}' not found.` });
+        .json({
+          message: `user: '${req.body.user_name}' or user email not found.`,
+        });
+      return;
     } else {
       new_group = await new_group.save();
     }
     res.status(201).json({ new_group: new_group });
+    return;
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -68,6 +73,7 @@ router.patch("/addusertogroup", async (req, res) => {
 
     if (!group || !user) {
       res.status(404).json({ message: "Group name or password is incorrect" });
+      return;
     } else {
       var group_obj = group.toObject();
       for (member of group_obj.members) {
@@ -113,6 +119,7 @@ router.patch("/removeuserfromgroup", async (req, res) => {
 
     if (!group || !user) {
       res.status(404).json({ message: "Group name or password is incorrect" });
+      return;
     } else {
       var updatedGroupMembers = group.members.filter(
         (member) => member.user_name != requesting_user
@@ -153,6 +160,7 @@ router.patch("/removeuserfromgroup", async (req, res) => {
       res.status(202).json({
         message: `${requesting_user} was removed from group: ${group_name}`,
       });
+      return;
     }
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -178,10 +186,12 @@ router.patch("/addfixturetogroup", async (req, res) => {
 
     if (!group || !user) {
       res.status(404).json({ message: "Group name or password is incorrect" });
+      return;
     } else if (user.user_name !== group.admin_user_name) {
       res.status(401).json({
         message: "You are not allowed to add fixtures to this group.",
       });
+      return;
     } else {
       var group_obj = group.toObject();
       var already_exist = FuncService.haveCommonElement(
@@ -190,6 +200,7 @@ router.patch("/addfixturetogroup", async (req, res) => {
       );
       if (already_exist) {
         res.status(400).json({ message: "Fixture already exist in the group" });
+        return;
       }
     }
 
@@ -198,6 +209,7 @@ router.patch("/addfixturetogroup", async (req, res) => {
     res.status(202).json({
       message: `${fixtures_ids_to_add.length} fixtures added to group: ${group_name}`,
     });
+    return;
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -222,10 +234,12 @@ router.patch("/removefixturefromgroup", async (req, res) => {
 
     if (!group || !user) {
       res.status(404).json({ message: "Group name or password is incorrect" });
+      return;
     } else if (user.user_name !== group.admin_user_name) {
       res.status(401).json({
         message: "You are not allowed to remove fixtures from this group.",
       });
+      return;
     }
 
     group.fixtures_ids = group.fixtures_ids.filter(
@@ -235,6 +249,7 @@ router.patch("/removefixturefromgroup", async (req, res) => {
     res.status(202).json({
       message: `fixture with id: [${fixture_id_to_remove}] has been successfully removed from group: ${group_name}`,
     });
+    return;
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
