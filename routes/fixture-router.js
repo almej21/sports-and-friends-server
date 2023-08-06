@@ -60,4 +60,20 @@ router.get("/allfixtures", async (req, res) => {
   }
 });
 
+// Get all the fixtures from the DB.
+
+router.get("/allfixturesavailable", async (req, res) => {
+  try {
+    const fixtures = await FixtureModel.find({}).lean();
+
+    if (fixtures.length > 0) {
+      return res.status(200).json(fixtures);
+    } else {
+      return res.status(404).json({ message: "No fixtures found." });
+    }
+  } catch (err) {
+    res.status(404).json(err);
+  }
+});
+
 module.exports = router;

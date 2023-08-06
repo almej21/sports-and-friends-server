@@ -1,38 +1,46 @@
 const mongoose = require("mongoose");
 const FixtureModel = require("../model/fixture-model");
+const FunService = require("./function-service");
 
-exports.saveFixtures = async function (
-  fixtures_arr_from_response,
-  fixtures_date
-) {
+const leagues = {
+  "Primera Division": "La Liga",
+};
+
+const saveFixtures = async function (fixtures_arr_from_response) {
   var fixtures_arr_to_save = [];
-  // var curr_time = new Date().getTime();
-  var fixture_time = fixtures_arr_from_response[0].fixture.timestamp;
 
   fixtures_arr_from_response.forEach((fixture) => {
+    const timestamp = FunService.dateToUnixTimestamp(fixture.utcDate);
+
     const fixture_doc = new FixtureModel({
-      unix_time: fixture_time,
-      date: fixtures_date,
-      league: fixture.league,
+      api_fixture_id: fixture.id,
+      date: fixture.utcDate.substring(0, 10),
+      fixture_id: fixture.id,
+      timestamp: timestamp,
+      league: {
+        name: leagues[fixture.competition.name],
+        country: fixture.area.name,
+        logo: fixture.competition.emblem,
+        flag: fixture.area.flag,
+      },
       clubs: {
         home: {
-          club_id: fixture.teams.home.id,
-          name: fixture.teams.home.name,
-          logo: fixture.teams.home.logo,
-          winner: fixture.teams.home.winner,
+          club_id: fixture.homeTeam.id,
+          name: fixture.homeTeam.shortName,
+          logo: fixture.homeTeam.crest,
         },
         away: {
-          club_id: fixture.teams.away.id,
-          name: fixture.teams.away.name,
-          logo: fixture.teams.away.logo,
-          winner: fixture.teams.away.winner,
+          club_id: fixture.awayTeam.id,
+          name: fixture.awayTeam.shortName,
+          logo: fixture.awayTeam.crest,
         },
       },
       goals: {
-        home: fixture.goals.home,
-        away: fixture.goals.away,
+        home: fixture.score.home,
+        away: fixture.score.away,
       },
     });
+
     fixtures_arr_to_save.push(fixture_doc);
   });
 
@@ -42,4 +50,54 @@ exports.saveFixtures = async function (
   } catch (error) {
     return false;
   }
+};
+
+function formatDateString(inputDate) {
+  const [year, month, day] = inputDate.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+const saveFixture = async function (fixture) {
+  const timestamp = FunService.dateToUnixTimestamp(fixture.utcDate);
+
+  const fixture_doc = new FixtureModel({
+    api_fixture_id: fixture.id,
+    date: formatDateString(fixture.utcDate.substring(0, 10)),
+    fixture_id: fixture.id,
+    timestamp: timestamp,
+    league: {
+      name: fixture.competition.name,
+      country: fixture.area.name,
+      logo: fixture.competition.emblem,
+      flag: fixture.area.flag,
+    },
+    clubs: {
+      home: {
+        club_id: fixture.homeTeam.id,
+        name: fixture.homeTeam.shortName,
+        logo: fixture.homeTeam.crest,
+      },
+      away: {
+        club_id: fixture.awayTeam.id,
+        name: fixture.awayTeam.shortName,
+        logo: fixture.awayTeam.crest,
+      },
+    },
+    score: {
+      winner: fixture.score.winner,
+      home: fixture.score.fullTime.home,
+      away: fixture.score.fullTime.away,
+    },
+  });
+  try {
+    await fixture_doc.save();
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+module.exports = {
+  saveFixtures: saveFixtures,
+  saveFixture: saveFixture,
 };

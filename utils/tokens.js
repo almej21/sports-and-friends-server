@@ -11,7 +11,7 @@ exports.generateRefreshToken = function (user) {
   };
   return (token = jwt.sign(user_payload, process.env.JWT_REFRESH, {
     // expiresIn: 60 * 60 * 24 * 7, // expires in 7 days
-    expiresIn: "2d", // this will be a numeric date value, to get the
+    expiresIn: 60 * 60 * 24, // this will be a numeric date value, to get the
     // expiration date in date-time format you must covert the numeric value to a date
     //(IN THE CLIENT SIDE)
   }));
@@ -29,7 +29,7 @@ exports.generateAccessToken = function (refreshToken) {
     };
     return (token = jwt.sign(user_payload, process.env.JWT_ACCESS, {
       // expiresIn: 60 * 60 * 24, // expires in 24 hours
-      expiresIn: "0.5h", //
+      expiresIn: 60 * 60, //
     }));
   } catch (error) {
     return { error: error.message };
@@ -45,8 +45,8 @@ exports.verifyRefToken = function (token) {
       info: "access token still valid",
     };
   } catch (error) {
-    throw new Error("refresh token invalid");
-    // return { payload: null, expired: error.message.includes("jwt expired") };
+    return { payload: null, expired: error.message.includes("jwt expired") };
+    // throw new Error("refresh token invalid");
   }
 };
 

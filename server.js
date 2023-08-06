@@ -1,28 +1,34 @@
 const chalk = require("chalk");
-const axios = require("axios");
 const express = require("express");
 const app = express();
-const port = 3000;
+const port = 4000;
 const mongoose = require("mongoose");
-const DbService = require("./utils/db-service");
 const userRouter = require("./routes/user-router.js");
 const groupRouter = require("./routes/group-router.js");
 const fixtureRouter = require("./routes/fixture-router.js");
-const FixtureModel = require("./model/fixture-model");
+const FunService = require("./utils/function-service");
+const cors = require("cors");
+var cookieParser = require("cookie-parser");
 
 mongoose
   .connect(process.env.DATABASE_URL)
   .then(() => {
     console.log("Server log: Connected to Database");
   })
-  .catch(() => {
+  .catch((err) => {
     console.log("error with connecting to DB");
+    console.log(err.response.data);
   });
 const db = mongoose.connection;
-// db.on("error", (err) => console.error(err));
-// db.once("open", () => console.log("Connected to Database"));
-
+app.use(cookieParser());
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+    credentials: true,
+  })
+);
 
 app.use("/user", userRouter);
 app.use("/groups", groupRouter);
@@ -39,31 +45,7 @@ app.listen(port, () => {
   );
 });
 
-var date = "2023-08-12";
-var league = "39";
-
 setInterval(function () {
-  axios
-    .get("https://v3.football.api-sports.io/fixtures", {
-      headers: { "x-apisports-key": process.env.API_KEY },
-      params: { date: date, league: league, season: "2023" },
-    })
-    .then(async (response) => {
-      var response_fixtures_arr = [...response.data.response];
-      var fixtures_date = response.data.parameters.date;
-
-      var existing_docs = FixtureModel.findOne({
-        date: date,
-        "league.name": league,
-      });
-      if (existing_docs) return;
-      if (DbService.saveFixtures(response_fixtures_arr, fixtures_date)) {
-        console.log(
-          `Server log: ${response_fixtures_arr.length} ${response_fixtures_arr[0].league.name} fixtures saved successfully.`
-        );
-      } else {
-        console.error("Server log: Error with saving documents");
-      }
-    });
-}, 1000 * 4); // every 4 seconds.
-// }, 1000 * 60 * 60); //every 1 hour.
+  FunService.fetchFixtures();
+  // }, 1000 * 5); // every 5 seconds.
+}, 1000 * 60 * 60 * 12); //every 12 hours.

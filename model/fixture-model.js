@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 
 const fixtureSchema = new mongoose.Schema({
-  fixture_unix_time: Number,
+  api_fixture_id: Number,
   date: String,
+  timestamp: Number,
   league: {
     name: String,
     country: String,
@@ -14,16 +15,15 @@ const fixtureSchema = new mongoose.Schema({
       club_id: Number,
       name: String,
       logo: String,
-      winner: String,
     },
     away: {
       club_id: Number,
       name: String,
       logo: String,
-      winner: String,
     },
   },
-  goals: {
+  score: {
+    winner: String,
     home: Number,
     away: Number,
   },
