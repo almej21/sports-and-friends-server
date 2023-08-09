@@ -8,34 +8,35 @@ exports.haveCommonElement = (arr1, arr2) => {
   return arr1.some((item) => arr2.includes(item));
 };
 
-function getNextSevenDays() {
-  const numberOfDays = 11;
-  const millisecondsPerDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+function getTodayAndTenthDay() {
+  const today = new Date();
+  const seventhDay = new Date();
+  seventhDay.setDate(today.getDate() + 10);
 
-  // Get the current date
-  const currentDate = new Date();
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-  // Create an array to store the dates
-  const datesArray = [];
+  const todayFormatted = formatDate(today);
+  const seventhDayFormatted = formatDate(seventhDay);
 
-  // Loop through the next 7 days and add them to the array
-  for (let i = 0; i < numberOfDays; i++) {
-    const nextDate = new Date(currentDate.getTime() + i * millisecondsPerDay);
-    const formattedDate = nextDate.toISOString().slice(0, 10); // Convert date to "YYYY-MM-DD" format
-    datesArray.push(formattedDate);
-  }
-
-  return datesArray;
+  return [todayFormatted, seventhDayFormatted];
 }
 
-//TODO:!!!
-// replace the date array in line 35 to use the getNextSevenDays() func.
+const leagues = {
+  premier_league: "PL",
+  la_liga: "PD",
+  serie_a: "SA",
+  bundesliga: "BL1",
+  ligue1: "FL1",
+};
+
 exports.fetchFixtures = () => {
-  const leagues = { "Premier League": "PL", "La Liga": "PD" };
-  // Call the function and get the array of next 7 days' dates
-  const dates = ["2023-08-12", "2023-08-14"];
-  // const nextSevenDaysDates = getNextSevenDays();
-  var iteration = 0;
+  // Call the function and get the array of dates.
+  const dates = getTodayAndTenthDay();
 
   for (let league in leagues) {
     axios
@@ -59,7 +60,7 @@ exports.fetchFixtures = () => {
                 console.log(
                   "Server log:",
                   chalk.green(
-                    `New fixture was added: [${fixture.homeTeam.shortName} - ${fixture.awayTeam.shortName}]`
+                    `New fixture was added: [${fixture.area.name}: ${fixture.homeTeam.shortName} - ${fixture.awayTeam.shortName}]`
                   )
                 );
               })
@@ -70,7 +71,7 @@ exports.fetchFixtures = () => {
             console.log(
               "Server log:",
               chalk.red(
-                `Fixture: [${fixture.homeTeam.shortName} - ${fixture.awayTeam.shortName}] already exist!`
+                `Fixture: [${fixture.area.name}: ${fixture.homeTeam.shortName} - ${fixture.awayTeam.shortName}] already exists in the DB!`
               )
             );
           }

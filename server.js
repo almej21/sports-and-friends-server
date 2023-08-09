@@ -47,5 +47,6 @@ app.listen(port, () => {
 
 setInterval(function () {
   FunService.fetchFixtures();
-  // }, 1000 * 5); // every 5 seconds.
+  // }, 1000 * 31); // every 31 seconds. 10 calls/minute is allowed.
+  // a request is being made for every league. 5 leagues = 5 requests.
 }, 1000 * 60 * 60 * 12); //every 12 hours.
