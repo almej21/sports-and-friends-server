@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const UserModel = require("../model/user-model");
+const User = require("../models/user-model");
 const bcrypt = require("bcrypt");
 const tokens = require("../utils/tokens");
 var auth = require("../middleware/authUser");
@@ -8,7 +8,7 @@ var auth = require("../middleware/authUser");
 // Log in / verify email and password
 router.post("/login", async (req, res) => {
   // the lean() function returns a raw json object from the DB, instead of a mongoose object.
-  const user = await UserModel.findOne({ email: req.body.email }).lean();
+  const user = await User.findOne({ email: req.body.email }).lean();
   try {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -24,8 +24,10 @@ router.post("/login", async (req, res) => {
       //from here we've verified the user's email and password
       var refreshToken = tokens.generateRefreshToken(user);
       var accessToken = tokens.generateAccessToken(refreshToken);
-      res.cookie("refreshToken", refreshToken, { httpOnly: true });
-      res.cookie("accessToken", accessToken, { httpOnly: true });
+      // res.cookie("refreshToken", refreshToken, { httpOnly: true });
+      res.cookie("refreshToken", refreshToken);
+      // res.cookie("accessToken", accessToken, { httpOnly: true });
+      res.cookie("accessToken", accessToken);
       res.json(user);
     });
   } catch (err) {
@@ -43,22 +45,19 @@ router.get("/logout", auth.authUser, (req, res) => {
 
 // Sign up / add new user / register user
 router.post("/signup", async (req, res) => {
-  var currTimeInUnix = new Date().getTime();
-
   // create a hashed string for the given password to store in the DB.
   var hashedPass = bcrypt.hashSync(req.body.password.trim(), 10);
 
-  const user = new UserModel({
+  const user = new User({
     user_name: req.body.user_name,
     email: req.body.email,
     password: hashedPass,
-    member_since: currTimeInUnix,
     credit: 0,
     points: 0,
   });
 
   try {
-    const existingUser = await UserModel.find({ email: req.body.email });
+    const existingUser = await User.find({ email: req.body.email });
     if (existingUser.length > 0) {
       res.status(401).send("email already exists");
       return;
@@ -75,16 +74,13 @@ router.post("/signup", async (req, res) => {
 //get user's info by access token in the user's cookies
 router.get("/userinfo", auth.authUser, async (req, res) => {
   try {
-    const user = await UserModel.findOne({
-      email: res.locals.user.email,
+    const user = await User.findOne({
+      email: req.requestingUser.email,
     }).lean();
     if (!user) {
       res.status(404).json({ message: "please login" });
       return;
     }
-
-    var member_since_date = new Date(parseInt(user.member_since));
-    user.member_since = member_since_date;
 
     res.status(200).json(user);
     return;
@@ -93,5 +89,41 @@ router.get("/userinfo", auth.authUser, async (req, res) => {
     res.status(404).json({ message: err });
   }
 });
+
+//get all users info
+router.get("/getallusers", auth.authUser, async (req, res) => {
+  console.log("get all users request");
+  try {
+    const users = await User.find({}).lean();
+    return res.status(200).json(users);
+  } catch (err) {
+    console.log(err);
+    return res.status(404).json({ message: err });
+  }
+});
+
+// TODO: remove password field from response
+// get user's info by user id.
+router.get("/:userId", auth.authUser, async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const user = await User.findOne({
+      _id: userId,
+    }).lean();
+    if (!user) {
+      res.status(404).json({ message: "please login" });
+      return;
+    }
+
+    res.status(200).json(user);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(404).json({ message: err });
+  }
+});
+
+// TODO: create a route for searching users by name.
 
 module.exports = router;

@@ -6,6 +6,7 @@ exports.generateRefreshToken = function (user) {
   //2. use fields that are useful in other parts of the
   //app/collections/models
   var user_payload = {
+    _id: user._id.toString(),
     user_name: user.user_name,
     email: user.email,
   };
@@ -24,12 +25,13 @@ exports.generateAccessToken = function (refreshToken) {
   try {
     const verifiedToken = this.verifyRefToken(refreshToken);
     var user_payload = {
+      _id: verifiedToken.payload._id,
       user_name: verifiedToken.payload.user_name,
       email: verifiedToken.payload.email,
     };
     return (token = jwt.sign(user_payload, process.env.JWT_ACCESS, {
       // expiresIn: 60 * 60 * 24, // expires in 24 hours
-      expiresIn: 60 * 60, //
+      expiresIn: 60 * 60, // 1hr
     }));
   } catch (error) {
     return { error: error.message };

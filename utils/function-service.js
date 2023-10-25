@@ -1,5 +1,5 @@
 const axios = require("axios");
-const FixtureModel = require("../model/fixture-model");
+const FixtureModel = require("../models/fixture-model");
 const { saveFixture } = require("./db-service");
 const chalk = require("chalk");
 
@@ -80,6 +80,26 @@ exports.fetchFixtures = () => {
       .catch((err) => {
         console.log(err);
       });
+  }
+};
+
+exports.deleteDocs = async () => {
+  try {
+    const fixtures = await FixtureModel.find({});
+    const today = new Date();
+    for (const fixture of fixtures) {
+      const fixtureDate = new Date(fixture.timestamp * 1000);
+      if (fixtureDate < today) {
+        fixture.deleteOne();
+        console.log(
+          chalk.red(
+            `fixture deleted: ${fixture.clubs.home.name} - ${fixture.clubs.away.name}`
+          )
+        );
+      }
+    }
+  } catch (err) {
+    console.log(err);
   }
 };
 

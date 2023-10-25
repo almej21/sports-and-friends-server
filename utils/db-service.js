@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const FixtureModel = require("../model/fixture-model");
+const FixtureModel = require("../models/fixture-model");
 const FunService = require("./function-service");
 
 const leagues = {

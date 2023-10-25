@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const GroupModel = require("../model/group-model");
-const UserModel = require("../model/user-model");
+const GroupModel = require("../models/group-model");
+const UserModel = require("../models/user-model");
 const FuncService = require("../utils/function-service");
 
 // Get all the groups in the collection.
@@ -148,7 +148,6 @@ router.patch("/removeuserfromgroup", async (req, res) => {
         user_name: user.user_name,
         email: user.email,
         password: user.password,
-        member_since: user.member_since,
         credit: user.credit,
         points: user.points,
         groups_ids: updatedGroups,

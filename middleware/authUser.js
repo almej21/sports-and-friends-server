@@ -18,15 +18,7 @@ exports.authUser = function (req, res, next) {
     }
     accessToken = tokens.generateAccessToken(refreshToken);
   }
-  res.locals.user = user.payload;
+  req.requestingUser = user.payload;
   res.cookie("accessToken", accessToken, { httpOnly: true });
   next();
 };
-
-// console.log(
-//   chalk.bgRed(`res.status(401).json({ message: "Must pass token" })`)
-// );
-
-// console.log(
-//   chalk.bgRed(`res.status(401).json({ message: "Invalid token" })`)
-// );

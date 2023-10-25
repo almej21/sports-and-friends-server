@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const UserModel = require("../model/user-model");
-const FixtureModel = require("../model/fixture-model");
-const FunService = require("../utils/function-service");
+const FixtureModel = require("../models/fixture-model");
 
 // Get all fixtures by date and league.
 router.get("/getfixturesbydateandleague", async (req, res) => {
